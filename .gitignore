@@ -1,0 +1,7 @@
+ignore*
+*.nes
+*.nsf
+*.nsf2
+*.exe
+*.bin
+*.mlb

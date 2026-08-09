@@ -1,0 +1,84 @@
+; ======================================================================================================
+;
+; Bitphase music driver for NES
+;
+; Copyright 2026 Heemin
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+; associated documentation files (the “Software”), to deal in the Software without restriction,
+; including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+; and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so.
+;
+; THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+;  LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+; IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+;
+; ======================================================================================================
+;
+; Using this driver
+;
+;     Communication with your game is entirely done using subroutines. Such ways like music ID variable
+;     should be what you would implement.
+;
+;     `bp_playSong` - Play a song with track number loaded in <A>.
+;     `bp_updateDriver` - Update music driver.
+;
+;      The driver doesn't contain SFX player. Instead it provides a variable for **enabling** register
+;      writes in music. This way, you can disable each music channels and push your own registers in
+;      another thread. `bp_var_Enabled_Channels` is what controls the register writes, with exact bit
+;      format of $4015. The register is **NOT** initialized by this driver itself. You should write $FF
+;      before updating driver when playing music only.
+;
+;      For the same reason, the `bp_var_ch_ps_Period_MSB_Old`, which stores old MSB byte of 2A03 and
+;      MMC5 pulse channels' period registers, is also **UNINITIALIZED** and should be used for your SFX
+;      driver too.
+;
+; ======================================================================================================
+;
+; Build Options (0 = false, 1 = true)
+;
+;     You should specify `bp_zp` and `bp_bss` somewhere in your game.
+;     Each size is specified with `bp_zp_size` and `bp_bss_size`.
+;     It can be simply done like `bp_zp: .dsb bp_zp` and `bp_bss: .dsb bp_bss_size` inside `ENUM` directive.
+;     Or `bp_zp = $F0` and `bp_bss = $700` to map them in fixed area.
+;
+; ======================================================================================================
+
+BP_EXP_SUNSOFT_5B = 0
+	; ^ Enables Sunsoft 5B expansion. This requires the AY/YM's clock set to 1.79/2MHz in the module.
+	
+; ======================================================================================================
+; Buildtime Constant (you DON'T touch any of these unless you know what you're doing)
+; ======================================================================================================
+
+BP_CH_COUNT = 5+(BP_EXP_SUNSOFT_5B*3)
+BP_PULSE_COUNT = 2
+
+; ======================================================================================================
+
+enum bp_zp
+		bp_temp:
+		bp_temp0: .dsb 1
+		bp_temp1: .dsb 1
+		bp_temp_ptr: .dsb 2
+		
+bp_zp_end:
+ende
+bp_zp_size = bp_zp_end-bp_zp
+
+; ======================================================================================================
+
+enum bp_bss
+		bp_var_Enabled_Channels: .dsb 1 ; ...DNT21 D = Enbale DPCM, N = Enable noise, T = Enable triangle, 2 = Enable pulse 2, 1 = Enable pulse 1
+		bp_var_ch_ps_Period_MSB_Old: .dsb BP_PULSE_COUNT
+
+		bp_var_ch_Pattern_lo: .dsb BP_CH_COUNT
+		bp_var_ch_Pattern_hi: .dsb BP_CH_COUNT
+		
+bp_bss_end:
+ende
+bp_bss_size = bp_bss_end-bp_bss
+
+; ======================================================================================================
