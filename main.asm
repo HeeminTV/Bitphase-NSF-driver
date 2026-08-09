@@ -1,6 +1,8 @@
 ; ======================================================================================================
-;
 ; Bitphase music driver for NES
+; ======================================================================================================
+
+; ======================================================================================================
 ;
 ; Copyright 2026 Heemin
 ;
@@ -10,11 +12,13 @@
 ; and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so.
 ;
 ; THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-;  LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+; LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 ; IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 ; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ;
+; ======================================================================================================
+
 ; ======================================================================================================
 ;
 ; Using this driver
@@ -46,14 +50,14 @@
 ;
 ; ======================================================================================================
 
-BP_EXP_SUNSOFT_5B = 0
+; BP_EXP_SUNSOFT_5B = 0
 	; ^ Enables Sunsoft 5B expansion. This requires the AY/YM's clock set to 1.79/2MHz in the module.
 	
 ; ======================================================================================================
-; Buildtime Constant (you DON'T touch any of these unless you know what you're doing)
+; Buildtime Constant (DON'T touch any of these unless you know what you're doing)
 ; ======================================================================================================
 
-BP_CH_COUNT = 5+(BP_EXP_SUNSOFT_5B*3)
+BP_CH_COUNT = 5
 BP_PULSE_COUNT = 2
 
 ; ======================================================================================================
