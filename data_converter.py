@@ -18,7 +18,6 @@
 import gzip
 import json
 import sys
-import re
 
 DIR_BYTE = "        .byte " # not sure about NESASM
 DIR_WORD = "        .word " # not sure about NESASM but i'm not gonna support that shit anyway
@@ -52,7 +51,7 @@ if __name__ == '__main__':
         if module["author"] == '':  song_name = os.path.splitext(os.path.basename(sys.argv[2]))[0]
         else:                       song_name = module["author"] + '_song'
     else:                           song_name = module["name"]
-    song_name = re.sub(r'[^a-zA-Z]', '_', song_name) # filter useless letters and replace them to '_'
+    song_name = "".join(c if ("a" <= c <= "z" or "A" <= c <= "Z") else "_" for c in song_name)
     print(f"Song name: {song_name}")
         
     # write header
@@ -76,4 +75,4 @@ if __name__ == '__main__':
         
         # write inst list
         outf.write(f"\n@inst_list:\n") # label
-        for i in range (0, len(module["instruments"])):
+        # for i in range (0, len(module["instruments"])):
