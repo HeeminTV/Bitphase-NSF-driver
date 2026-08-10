@@ -7,11 +7,11 @@
 ; Copyright 2026 Heemin
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-; associated documentation files (the “Software”), to deal in the Software without restriction,
+; associated documentation files (the "Software"), to deal in the Software without restriction,
 ; including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
 ; and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so.
 ;
-; THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
 ; LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 ; IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
@@ -45,13 +45,18 @@
 ;
 ;     You should specify `bp_zp` and `bp_bss` somewhere in your game.
 ;     Each size is specified with `bp_zp_size` and `bp_bss_size`.
-;     It can be simply done like `bp_zp: .dsb bp_zp` and `bp_bss: .dsb bp_bss_size` inside `ENUM` directive.
-;     Or `bp_zp = $F0` and `bp_bss = $700` to map them in fixed area.
+;     It can be simply done like `bp_zp: .dsb bp_zp` and `bp_bss: .dsb bp_bss_size` inside `ENUM` 
+;     directive.
+;     Or like `bp_zp = $F8` and `bp_bss = $200` to map them in fixed area.
 ;
 ; ======================================================================================================
 
-; BP_EXP_SUNSOFT_5B = 0
-	; ^ Enables Sunsoft 5B expansion. This requires the AY/YM's clock set to 1.79/2MHz in the module.
+BP_ENABLE_VCHANS = 1
+	; ^ Enable virtual channel support.
+	
+BP_UNOFFICIAL_INSTRUCTIONS = 0
+	; ^ Disabled by default for compatibility with old NSF players.
+	;   Turning this on may improve performance slightly.
 	
 ; ======================================================================================================
 ; Buildtime Constant (DON'T touch any of these unless you know what you're doing)
@@ -75,14 +80,23 @@ bp_zp_size = bp_zp_end-bp_zp
 ; ======================================================================================================
 
 enum bp_bss
-		bp_var_Enabled_Channels: .dsb 1 ; ...DNT21 D = Enbale DPCM, N = Enable noise, T = Enable triangle, 2 = Enable pulse 2, 1 = Enable pulse 1
-		bp_var_ch_ps_Period_MSB_Old: .dsb BP_PULSE_COUNT
+		bp_var_Enabled_Channels:		.dsb 1 ; ...DNT21 D = Enbale DPCM, N = Enable noise, T = Enable triangle, 2 = Enable pulse 2, 1 = Enable pulse 1
+		bp_var_ch_ps_Period_MSB_Old:	.dsb BP_PULSE_COUNT
+		
+		bp_var_Base_Song_Ptr: 			.dsb 2
+		bp_var_Groove_Tbl: 				.dsb 2
 
-		bp_var_ch_Pattern_lo: .dsb BP_CH_COUNT
-		bp_var_ch_Pattern_hi: .dsb BP_CH_COUNT
+		bp_var_ch_Pattern_lo: 			.dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1)
+		bp_var_ch_Pattern_hi: 			.dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1)
+		bp_var_ch_Instrument_Reload_lo: .dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1)
+		bp_var_ch_Instrument_Reload_hi: .dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1)
+		bp_var_ch_Instrument_lo: 		.dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1)
+		bp_var_ch_Instrument_hi: 		.dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1)
 		
 bp_bss_end:
 ende
 bp_bss_size = bp_bss_end-bp_bss
 
 ; ======================================================================================================
+
+		include "init.asm"
