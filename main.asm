@@ -26,7 +26,7 @@
 ;     Communication with your game is entirely done using subroutines. Such ways like music ID variable
 ;     should be what you would implement.
 ;
-;     `bp_playSong` - Play a song with track number loaded in <A>.
+;     `bp_playSong` - Play a song with track ptr loaded in LSB: <A>, MSB: <X>.
 ;     `bp_updateDriver` - Update music driver.
 ;
 ;      The driver doesn't contain SFX player. Instead it provides a variable for **enabling** register

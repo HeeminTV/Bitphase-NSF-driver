@@ -5,3 +5,6 @@ ignore*
 *.exe
 *.bin
 *.mlb
+*.gz
+*.btp
+test*
