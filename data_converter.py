@@ -56,28 +56,28 @@ if __name__ == '__main__':
     song_name = "".join(c if ("a" <= c <= "z" or "A" <= c <= "Z") else "_" for c in song_name)
     print(f"Song name: {song_name}")
         
-    # write header
-    
+# write header
     # bp_song_header:
-    #   .WORD @inst_list
-    #   .WORD @table_list
-    #   .BYTE inital_speed, -1
+    #   .word @inst_list
+    #   .word @table_list
+    #   .byte inital_speed
     #   (96*2 bytes of note period table split in LSB and MSB)
     #   (pattern ptrs listed as pattern order)
+    #   .byte 0, $FF
     with open(sys.argv[2], 'w') as f: f.write(f"bp_{song_name}_header:\n")
     with open(sys.argv[2], 'a') as outf:
         init_speed = module["songs"][0]["initialSpeed"]
-        outf.write(f"{DIR_WORD}@inst_list\n{DIR_WORD}@table_list\n{DIR_BYTE}{init_speed}, $FF\n")
+        outf.write(f"{DIR_WORD}@inst_list\n{DIR_WORD}@table_list\n{DIR_BYTE}{init_speed&0xFF}\n")
         
-        # write note table
+# write note table
         output_bytes(outf, module["songs"][0]["tuningTable"], 12, "<") # length SHOULD be 96
         output_bytes(outf, module["songs"][0]["tuningTable"], 12, ">") # length SHOULD be 96
         
-        # write pattern list (ends with $00FF. end condition: if MSB is 0)
+# write pattern list (ends with $00FF. end condition: if MSB is 0)
         for i in range(0, len(module["patternOrder"])): outf.write(f"{DIR_WORD}@pat_{i}\n")
         outf.write(f"{DIR_BYTE}$FF, 0\n")
         
-        # write inst list
+# write inst list
         outf.write(f"\n@inst_list:\n") # label
         
         instid_replace_tbl={}
@@ -105,7 +105,7 @@ if __name__ == '__main__':
             loopoffset = j-module["instruments"][i]["loop"]+1
             outf.write(f"{DIR_BYTE}${(0x80|((loopoffset>>8)&0x01)):02x}, {(loopoffset&0xFF)}\n")
         
-        # write table list
+# write table list
         outf.write(f"\n@table_list:\n") # label
         
         tableid_replace_tbl={}
@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
         for i in range(0, len(tableid_replace_tbl)): # i = table number
             headerbyte = (1 if module["tables"][i]["additive"] else 0)
-            outf.write(f"\n@table_{i}: ; {list(tableid_replace_tbl)[i]}\n{DIR_BYTE}{headerbyte}\n")
+            outf.write(f"\n@table_{i}: ; {list(tableid_replace_tbl)[i]}\n{DIR_BYTE}{headerbyte:02x}\n")
             
             if len(module["tables"][i]["rows"]) == 0: # empty table
                 outf.write(f"{DIR_WORD}$0000\n{DIR_WORD}$8002\n")

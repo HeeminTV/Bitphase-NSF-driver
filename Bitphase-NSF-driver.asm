@@ -84,7 +84,8 @@ enum bp_bss
 		bp_var_ch_ps_Period_MSB_Old:	.dsb BP_PULSE_COUNT
 		
 		bp_var_Base_Song_Ptr: 			.dsb 2
-		bp_var_Groove_Tbl: 				.dsb 2
+		bp_var_Groove_Tbl: 				.dsb 2 ; MSB = 0 means it's using single speed
+		bp_var_Groove_Timer:			.dsb 1
 
 		bp_var_ch_Pattern_lo: 			.dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1)
 		bp_var_ch_Pattern_hi: 			.dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1)
@@ -93,10 +94,36 @@ enum bp_bss
 		bp_var_ch_Instrument_lo: 		.dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1)
 		bp_var_ch_Instrument_hi: 		.dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1)
 		
+		bp_var_ch_VolumeColumn:			.dsb BP_CH_COUNT*(BP_ENABLE_VCHANS*3+1) ; volume column << 4
+		
 bp_bss_end:
 ende
 bp_bss_size = bp_bss_end-bp_bss
 
 ; ======================================================================================================
 
-		include "init.asm"
+bp_playSong:
+		STA bp_var_Base_Song_Ptr+0
+		STA bp_temp_ptr+0
+		STX bp_var_Base_Song_Ptr+1
+		STX bp_temp_ptr+1
+
+		LDA #0
+		STA bp_var_Groove_Tbl+1
+		STA bp_var_Groove_Timer
+		
+		LDY #4
+		LDA (bp_temp_ptr),Y ; initial speed
+		STA bp_var_Groove_Tbl+0
+		
+		LDX #BP_CH_COUNT-1
+@initvar:
+		LDA #$F0
+		STA bp_var_ch_VolumeColumn,X
+		
+		DEX
+		BPL @initvar
+		RTS
+		
+bp_updateDriver:
+		RTS

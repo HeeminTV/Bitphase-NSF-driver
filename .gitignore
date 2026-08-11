@@ -12,3 +12,4 @@ ignore*
 *.gz
 *.btp
 test*
+*.bat
