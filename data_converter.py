@@ -85,17 +85,15 @@ if __name__ == '__main__':
             instid_replace_tbl[item["id"]] = i
             outf.write(f"{DIR_WORD}@inst_{i}\n")
         
-        # write inst data (TODO: move to below table list and table data)
-        
         # inst data format: 4 bytes per one row, loop by having negative first byte.
-        # LRAPPPPP, R = reset phase, A = tone acc, P = tone offset MSB, L = bit 0 is MSB of loop row offset and next byte is LSB
+        # LRAPPPPP, L = bit 0 is MSB of loop row offset and next byte is LSB, R = reset phase, A = tone acc, P = tone offset MSB
         # WW0EVVVV, W = pulse width, E = env/constant, V = volume
         # PPPPPPPP, P = tone offset LSB
         # ERRRSSSS, E = enable sweep, R = speed, S = shift
 
         for i in range(0, len(instid_replace_tbl)): # i = inst number
-            outf.write(f"\n@inst_{i}:\n")
-            for j in range(0, len(module["instruments"][i]["rows"])):
+            outf.write(f"\n@inst_{i}: ; {list(instid_replace_tbl)[i]}\n")
+            for j in range(0, len(module["instruments"][i]["rows"])): # j = row
                 instrow = module["instruments"][i]["rows"][j]
 
                 byte0 = (0x40 if instrow["retrigger"] else 0x00)|(0x20 if instrow["toneAccumulation"] else 0x00)|((instrow["toneAdd"]>>8)&0x1F)
@@ -105,12 +103,32 @@ if __name__ == '__main__':
                 
                 outf.write(f"{DIR_BYTE}${byte0:02x}, ${byte1:02x}, ${byte2:02x}, ${byte3:02x}\n")
             loopoffset = j-module["instruments"][i]["loop"]+1
-            outf.write(f"{DIR_BYTE}${(0x80|((loopoffset>>8)&0x01)):02x}, ${(loopoffset&0xFF):02x}\n")
+            outf.write(f"{DIR_BYTE}${(0x80|((loopoffset>>8)&0x01)):02x}, {(loopoffset&0xFF)}\n")
         
         # write table list
-        # outf.write(f"\n@table_list:\n")
-        # for i in range (0, len(module["tables"])):
-            # if module["tables"][i]["id"] 
+        outf.write(f"\n@table_list:\n") # label
+        
+        tableid_replace_tbl={}
+        for i, item in enumerate(module["tables"]): # make convert table
+            tableid_replace_tbl[item["id"]] = i
+            outf.write(f"{DIR_WORD}@table_{i}\n")
+            
+        # table data format: starting with one byte header and rest of them are 15-bit signed 2's complement numbers for offset.
+        # header: xxxxxxxA, A = additive
+        # footer: (loop_offset*2)|$8000
+
+        for i in range(0, len(tableid_replace_tbl)): # i = table number
+            headerbyte = (1 if module["tables"][i]["additive"] else 0)
+            outf.write(f"\n@table_{i}: ; {list(tableid_replace_tbl)[i]}\n{DIR_BYTE}{headerbyte}\n")
+            
+            if len(module["tables"][i]["rows"]) == 0: # empty table
+                outf.write(f"{DIR_WORD}$0000\n{DIR_WORD}$8002\n")
+            else:
+                for j in range(0, len(module["tables"][i]["rows"])): # j = row
+                    offset = max(-16384, min(module["tables"][i]["rows"][j], 16387))
+                    outf.write(f"{DIR_WORD}${(offset&0x7FFF):04x}\n")
+                loopoffset = j-module["tables"][i]["loop"]+1
+                outf.write(f"{DIR_WORD}${((loopoffset*2)|0x8000):04x}\n")
         
         # pattern data format: (it isn't CPU friendly but saves lot of space)
         # $00-$5F = notes (terminate reading)
